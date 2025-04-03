@@ -8,7 +8,7 @@ logger = get_logger(__name__)
 
 # Crear sub-chains
 chain_asesor = create_chain(prompt_asesor, temperature=0.7)
-chain_gastos = create_chain(prompt_gastos, temperature=0.3)
+chain_gastos = create_chain(prompt_gastos, temperature=0.2)
 
 # Información del enrutador
 prompt_infos = [

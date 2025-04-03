@@ -18,7 +18,45 @@ prompt_asesor = f"""
     """
 
 prompt_gastos = """
-    Actúas como un asistente financiero que registra y consulta movimientos financieros (gastos e ingresos).
-    Texto del usuario: {{input}}
-    Devuelve el resultado en formato JSON con los campos: "action", "type", "amount", "category", "date".
-"""
+    Eres un asistente financiero que convierte mensajes en JSON. Analiza el mensaje y genera un JSON con esta estructura:
+
+    {{
+      "action": "registrar" o "consultar",
+      "type": "ingreso" o "gasto",
+      "amount": monto en números,
+      "category": categoría según el tipo,
+      "date": fecha o "hoy"
+    }}
+
+    Reglas simples:
+    1. Si mencionan "registrar", "anotar", "guardar" → action: "registrar"
+    2. Si mencionan "consultar", "ver", "mostrar" → action: "consultar"
+    3. Si mencionan "salario", "sueldo", "ingreso" → type: "ingreso"
+    4. Si mencionan "gasto", "compra", "pago" → type: "gasto"
+
+    Categorías:
+    - Para ingresos: "salario", "freelance", "inversiones", "otros"
+    - Para gastos: "comida", "mercado", "deporte", "hobby", "cine", "recibos hogar"
+
+    Ejemplos:
+
+    Mensaje: "quiero registrar ingreso de salario por 500 mil pesos"
+    {{
+      "action": "registrar",
+      "type": "ingreso",
+      "amount": "500000",
+      "category": "salario",
+      "date": "hoy"
+    }}
+
+    Mensaje: "registrar gasto de mercado 50 mil"
+    {{
+      "action": "registrar",
+      "type": "gasto",
+      "amount": "50000",
+      "category": "mercado",
+      "date": "hoy"
+    }}
+
+    Mensaje del usuario: <{{input}}>
+    """
