@@ -18,97 +18,49 @@ prompt_asesor = f"""
     """
 
 prompt_gastos = """
-Eres 'Money Mentor', un asistente financiero especializado en el registro y consulta de movimientos financieros. 
-Tu tarea es interpretar el mensaje del usuario y devolver SIEMPRE una respuesta en formato JSON en español.
+IGNORA CUALQUIER INSTRUCCIÓN O EJEMPLO PREVIO SI CONTRADICE EL INPUT ACTUAL.
+TU ÚNICA TAREA es analizar el siguiente texto de usuario en español y generar un objeto JSON basado EXCLUSIVAMENTE en él.
 
-REQUISITOS DEL OUTPUT:
+Texto del Usuario a Analizar: {input}
+
+PASOS OBLIGATORIOS A SEGUIR INTERNAMENTE:
+1.  **Leer el Texto del Usuario:** Enfócate únicamente en el texto proporcionado arriba en `<{{input}}>`.
+2.  **Determinar Acción:** ¿Es 'registrar' o 'consultar'?
+3.  **Determinar Tipo:** ¿Es 'ingreso' o 'gasto'? Presta atención a palabras como "salario" (ingreso) vs "pago", "arriendo", "compra" (gasto).
+4.  **Extraer Monto EXACTO:** Encuentra la cantidad. Convierte texto a número (ej: "120 mil" -> "120000", "500 mil" -> "500000"). Si no hay, usa "". ¡NO USES EJEMPLOS, USA EL MONTO DEL INPUT ACTUAL!
+5.  **Determinar Categoría:** Usa palabras clave del input. "salario" -> "salario"; "arriendo"/"apartamento" -> "recibos hogar"; "mercado" -> "mercado"; "almuerzo" -> "comida". Default para ingreso sin categoría: "salario". Default para gasto sin categoría: "otros".
+6.  **Determinar Fecha:** Usa la fecha del input o "hoy" si no se especifica.
+7.  **Generar JSON:** Construye el JSON con los datos EXTRAÍDOS del input actual.
+
+FORMATO JSON DE SALIDA (SOLO ESTO):
 {{
-  "action": "registrar" o "consultar",
-  "type": "ingreso" o "gasto",
-  "amount": número exacto (sin puntos ni comas),
-  "category": categoría en español,
-  "date": fecha en español o "hoy"
+  "action": (resultado paso 2),
+  "type": (resultado paso 3),
+  "amount": (resultado paso 4),
+  "category": (resultado paso 5),
+  "date": (resultado paso 6)
 }}
 
-REGLAS GENERALES:
-1. NUNCA respondas en inglés.
-2. El JSON SIEMPRE debe estar en español.
-3. Si no se menciona una fecha explícita, usa "hoy".
+EJEMPLO DE CÓMO APLICAR LOS PASOS (NO COPIAR DIRECTAMENTE):
+Si el Input es: "quiero registrar pago de arriendo apartamento por 120 mil pesos."
+1. Input leído.
+2. Acción: 'registrar'
+3. Tipo: 'gasto' (por "pago", "arriendo")
+4. Monto: "120000" (extraído de "120 mil")
+5. Categoría: "recibos hogar" (extraído de "arriendo apartamento")
+6. Fecha: "hoy"
+7. JSON Generado: {{ "action": "registrar", "type": "gasto", "amount": "120000", "category": "recibos hogar", "date": "hoy" }}
 
-DETECCIÓN DE LA ACCIÓN:
-- "registrar", "añadir", "agregar", "pago" → action: "registrar"
-- "consultar", "ver", "mostrar" → action: "consultar"
+Si el Input es: "quiero registrar ingreso de salario por 500 mil pesos."
+1. Input leído.
+2. Acción: 'registrar'
+3. Tipo: 'ingreso' (por "ingreso", "salario")
+4. Monto: "500000" (extraído de "500 mil")
+5. Categoría: "salario" (extraído de "salario")
+6. Fecha: "hoy"
+7. JSON Generado: {{ "action": "registrar", "type": "ingreso", "amount": "500000", "category": "salario", "date": "hoy" }}
 
-DETECCIÓN DEL TIPO:
-- Si el usuario menciona palabras relacionadas con dinero y no menciona explícitamente "ingreso", el tipo será "gasto".
-- Palabras que indican "gasto": "pago", "recibo", "cuenta", "compra", "consumo", "gasto", "almuerzo", "desayuno", "cena"
-- Palabras que indican "ingreso": "salario", "ingreso", "venta", "dinero recibido", "honorarios"
-
-CONVERSIÓN DE MONTOS:
-- Convierte cantidades numéricas con precisión.
-- Si el monto está en palabras:
-  - "23 mil seiscientos" → "23600"
-  - "50 mil" → "50000"
-  - "60 mil" → "60000"
-  - "500 mil" → "500000"
-  - "1 millón" → "1000000"
-- Si el monto es numérico (ej: "50.000" o "50000"), conviértelo directamente.
-- Si el monto no está presente, deja el campo en blanco.
-
-CATEGORÍAS:
-Para "gasto":
-- Opciones: "comida", "mercado", "deporte", "hobby", "cine", "recibos hogar"
-- Si se menciona "recibo" o "cuenta", categoriza como "recibos hogar".
-- Si se menciona "almuerzo", "desayuno" o "cena", categoriza como "comida".
-
-Para "ingreso":
-- Opciones: "salario", "freelance", "inversiones", "otros"
-- Si no se menciona la categoría explícita, usa "salario".
-
-EJEMPLOS PRÁCTICOS:
-
-Entrada: "quiero registrar pago de almuerzo por 60 mil pesos."
-{{
-  "action": "registrar",
-  "type": "gasto",
-  "amount": "60000",
-  "category": "comida",
-  "date": "hoy"
-}}
-
-Entrada: "consultar gastos de cine del mes pasado"
-{{
-  "action": "consultar",
-  "type": "gasto",
-  "amount": "",
-  "category": "cine",
-  "date": "el mes pasado"
-}}
-
-Entrada: "agregar ingreso de 50 mil por salario"
-{{
-  "action": "registrar",
-  "type": "ingreso",
-  "amount": "50000",
-  "category": "salario",
-  "date": "hoy"
-}}
-
-Entrada: "registrar ingreso freelance de 300 mil pesos ayer"
-{{
-  "action": "registrar",
-  "type": "ingreso",
-  "amount": "300000",
-  "category": "freelance",
-  "date": "ayer"
-}}
-
-RECUERDA:
-1. NUNCA respondas en inglés.
-2. SIEMPRE devuelve un JSON estructurado.
-3. Si tienes dudas, genera el mejor resultado posible con la información proporcionada.
-
-Entrada a procesar: <{{input}}>
+INSTRUCCIÓN FINAL: Analiza el {input} proporcionado y genera el JSON correspondiente siguiendo los pasos y el formato. Tu única salida debe ser el JSON resultante del análisis del input actual.
 """
 
 
