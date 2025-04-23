@@ -14,12 +14,12 @@ chain_gastos = create_chain(prompt_gastos, temperature=0.0, use_gpt4=True)   # G
 prompt_infos = [
     {
         "name": "control_gastos",
-        "description": "Registro y consulta de ingresos (salarios, pagos) y gastos (compras, pagos). Manejo de montos y categorías. Usar cuando el usuario quiera registrar o consultar movimientos financieros específicos.",
+        "description": "Útil para registrar o consultar transacciones financieras específicas: ingresos (salarios, pagos recibidos), gastos (compras, pagos realizados), movimientos. Requiere detalles como montos, categorías.",
         "prompt_template": prompt_gastos
     },
     {
         "name": "asesoria_financiera",
-        "description": "Consejos generales sobre finanzas, inversiones y ahorro. Usar cuando el usuario pida recomendaciones o consejos financieros.",
+        "description": "Útil para consejos generales sobre finanzas, inversiones, ahorros, planificación financiera, o para responder a saludos y preguntas generales no transaccionales.",
         "prompt_template": prompt_asesor
     }
 ]
@@ -27,11 +27,11 @@ prompt_infos = [
 # Crear el MultiPromptChain
 try:
     router_chain = MultiPromptChain.from_prompts(
-        llm=chain_gastos.llm,  # Usamos GPT-4 para mejor routing
+        llm=chain_gastos.llm,  # Mantenemos GPT-4 para el routing
         prompt_infos=prompt_infos,
-        default_chain=chain_gastos,  # Cambiamos el default chain
+        default_chain=chain_asesor,  # Cambiamos el default al asesor
         verbose=True
     )
-    logger.info("Router Chain creado exitosamente")
+    logger.info("Router Chain creado exitosamente con default=asesor")
 except Exception as e:
     logger.exception(f"Error al crear el router_chain: {str(e)}")
